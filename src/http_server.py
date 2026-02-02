@@ -130,13 +130,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             return self._send_json(500, {"error": "infer failed", "detail": str(exc)})
         return self._send_json(200, result)
 
-    def log_message(self, format, *args):
-        return
-
 
 def run_server(host="0.0.0.0", port=8000):
     server = HTTPServer((host, port), RequestHandler)
-    print("MCTS service listening on {}:{}".format(host, port))
+    print("MCTS service listening on {}:{}".format(host, port), flush=True)
     server.serve_forever()
 
 

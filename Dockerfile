@@ -1,8 +1,9 @@
-FROM python:3.12-slim
+FROM python:3.12-alpine3.23
 
 WORKDIR /app
 
-RUN pip install numpy==1.26.4
+RUN pip install --no-cache-dir numpy==1.26.4 \
+    && rm -rf /root/.cache/pip
 
 COPY src/ .
 

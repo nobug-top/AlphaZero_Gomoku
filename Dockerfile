@@ -5,6 +5,8 @@ WORKDIR /app
 RUN pip install --no-cache-dir numpy==1.26.4 \
     && rm -rf /root/.cache/pip
 
+COPY best_policy_8_8_5.model .
+
 COPY src/ .
 
 CMD ["python", "http_server.py"]

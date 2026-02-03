@@ -84,6 +84,22 @@ def _infer(payload):
 
 
 class RequestHandler(BaseHTTPRequestHandler):
+    def _check_auth(self):
+        token = os.environ.get("API_TOKEN")
+        if not token:
+            return True
+        auth = self.headers.get("Authorization", "")
+        return auth == "Bearer {}".format(token)
+
+    def _require_auth(self):
+        self.send_response(401)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("WWW-Authenticate", "Bearer")
+        body = json.dumps({"error": "unauthorized"}).encode("utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def _send_json(self, status_code, data):
         body = json.dumps(data).encode("utf-8")
         self.send_response(status_code)
@@ -93,6 +109,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        if not self._check_auth():
+            return self._require_auth()
         path = urlparse(self.path).path
         if path == "/health":
             return self._send_json(200, {"status": "ok"})
@@ -113,6 +131,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         return self._send_json(404, {"error": "not found"})
 
     def do_POST(self):
+        if not self._check_auth():
+            return self._require_auth()
         path = urlparse(self.path).path
         if path != "/infer":
             return self._send_json(404, {"error": "not found"})

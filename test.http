@@ -1,11 +1,13 @@
+### health
 GET http://127.0.0.1:8000/health
-
-###
+Authorization: Bearer 1234567890
+### schema
 GET http://127.0.0.1:8000/schema
-
-###
+Authorization: Bearer 1234567890
+### infer
 POST http://127.0.0.1:8000/infer
 Content-Type: application/json
+Authorization: Bearer 1234567890
 
 {
   "current_player": 1,

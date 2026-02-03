@@ -9,3 +9,9 @@ dev:
 
 docker-build:
     {{ docker }} build -t alphazero-gomoku:latest .
+
+docker-compose-up:
+    {{ docker }} compose up -d
+
+docker-compose-down:
+    {{ docker }} compose down -v

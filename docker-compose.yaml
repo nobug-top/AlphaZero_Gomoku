@@ -1,0 +1,11 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 8000:8000
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - API_TOKEN=1234567890

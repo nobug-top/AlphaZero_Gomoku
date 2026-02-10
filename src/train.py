@@ -6,6 +6,7 @@ An implementation of the training pipeline of AlphaZero for Gomoku
 """
 
 from __future__ import print_function
+import os
 import random
 import time
 import numpy as np
@@ -51,6 +52,10 @@ class TrainPipeline:
         self.check_freq = 50
         self.game_batch_num = 1500
         self.best_win_ratio = 0.0
+        # 停止相关
+        # early_stop_patience 次训练的 提升小于 early_stop_delta 则停止训练
+        self.early_stop_patience = 5
+        self.early_stop_delta = 0.01
         # num of simulations used for the pure mcts, which is used as
         # the opponent to evaluate the trained policy
         self.pure_mcts_playout_num = 1000
@@ -195,13 +200,17 @@ class TrainPipeline:
     def run(self):
         """run the training pipeline"""
         try:
+            no_improve_count = 0
+            best_for_stop = 0.0
             for i in range(self.game_batch_num):
                 batch_start = time.time()
                 self.collect_selfplay_data(self.play_batch_size)
                 batch_elapsed = time.time() - batch_start
                 print(
                     "batch i:{}, episode_len:{}, elapsed:{:.2f}s".format(
-                        i + 1, self.episode_len, batch_elapsed
+                        i + 1,
+                        self.episode_len,
+                        batch_elapsed,
                     )
                 )
                 if len(self.data_buffer) > self.batch_size:
@@ -223,10 +232,27 @@ class TrainPipeline:
                         ):
                             self.pure_mcts_playout_num += 1000
                             self.best_win_ratio = 0.0
+                    if self.early_stop_patience > 0:
+                        if win_ratio > best_for_stop + self.early_stop_delta:
+                            best_for_stop = win_ratio
+                            no_improve_count = 0
+                        else:
+                            no_improve_count += 1
+                            print(
+                                "early-stop check: no_improve_count={}/{}".format(
+                                    no_improve_count, self.early_stop_patience
+                                )
+                            )
+                            if no_improve_count >= self.early_stop_patience:
+                                print("Early stop: win_ratio no longer improving")
+                                break
         except KeyboardInterrupt:
             print("\n\rquit")
 
 
 if __name__ == "__main__":
-    training_pipeline = TrainPipeline()
+    init_model = (
+        "./current_policy.model" if os.path.exists("./current_policy.model") else None
+    )
+    training_pipeline = TrainPipeline(init_model=init_model)
     training_pipeline.run()

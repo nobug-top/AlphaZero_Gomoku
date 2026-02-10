@@ -5,13 +5,13 @@ install:
 
 dev:
     just install
-    uv run src/http_server.py
+    BOARD_WIDTH=10 BOARD_HEIGHT=10 uv run src/http_server.py
 
 docker-build:
     {{ docker }} build -t alphazero-gomoku:latest .
 
 docker-compose-up:
-    {{ docker }} compose up -d
+    {{ docker }} compose up --build --force-recreate
 
 docker-compose-down:
     {{ docker }} compose down -v

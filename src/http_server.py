@@ -47,15 +47,7 @@ def _build_board(params, state):
 
 
 def _infer(payload):
-    params = {
-        "model_file": "best_policy_8_8_5.model",
-        "width": int(os.environ.get("BOARD_WIDTH", "8")),
-        "height": int(os.environ.get("BOARD_HEIGHT", "8")),
-        "n_in_row": 5,
-        "c_puct": 5,
-        "n_playout": 400,
-        "temp": 1e-3,
-    }
+    params = get_config()
     state = payload
     board = _build_board(params, state)
 
@@ -186,9 +178,26 @@ class RequestHandler(BaseHTTPRequestHandler):
         print(message, end="", flush=True)
 
 
+def get_config():
+    return {
+        "model_file": "best_policy_8_8_5.model",
+        # 棋盘大小
+        "width": int(os.environ.get("BOARD_WIDTH", "8")),
+        "height": int(os.environ.get("BOARD_HEIGHT", "8")),
+        # 连成几子算赢（5 连）
+        "n_in_row": 5,
+        # PUCT 探索系数，越大越偏探索
+        "c_puct": 5,
+        # 每步模拟次数（搜索强度/耗时）
+        "n_playout": 400,
+        "temp": 1e-3,
+    }
+
+
 def run_server(host="0.0.0.0", port=8000):
     server = HTTPServer((host, port), RequestHandler)
     print("MCTS service listening on {}:{}".format(host, port), flush=True)
+    print(get_config(), flush=True)
     server.serve_forever()
 
 

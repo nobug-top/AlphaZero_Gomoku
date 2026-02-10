@@ -8,4 +8,6 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8000
+      - BOARD_WIDTH=8
+      - BOARD_HEIGHT=8
       - API_TOKEN=1234567890

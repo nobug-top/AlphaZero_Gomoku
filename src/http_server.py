@@ -49,8 +49,8 @@ def _build_board(params, state):
 def _infer(payload):
     params = {
         "model_file": "best_policy_8_8_5.model",
-        "width": 8,
-        "height": 8,
+        "width": int(os.environ.get("BOARD_WIDTH", "8")),
+        "height": int(os.environ.get("BOARD_HEIGHT", "8")),
         "n_in_row": 5,
         "c_puct": 5,
         "n_playout": 400,

@@ -6,6 +6,7 @@ An implementation of the training pipeline of AlphaZero for Gomoku
 """
 
 from __future__ import print_function
+from rich.console import Console
 import os
 import random
 import time
@@ -19,6 +20,8 @@ from mcts_alphaZero import MCTSPlayer
 from policy_value_net_pytorch import PolicyValueNet  # Pytorch
 # from policy_value_net_tensorflow import PolicyValueNet # Tensorflow
 # from policy_value_net_keras import PolicyValueNet # Keras
+
+console = Console()
 
 
 class TrainPipeline:
@@ -72,9 +75,8 @@ class TrainPipeline:
                 self.board_width,
                 self.board_height,
             )
-        print(
-            "Training device: {}".format(self.policy_value_net.device),
-            flush=True,
+        console.print(
+            f"[bold green] Training device: {self.policy_value_net.device}",
         )
         self.mcts_player = MCTSPlayer(
             self.policy_value_net.policy_value_fn,
@@ -153,19 +155,19 @@ class TrainPipeline:
         explained_var_new = 1 - np.var(
             np.array(winner_batch) - new_v.flatten()
         ) / np.var(np.array(winner_batch))
-        print(
+        console.print(
             (
-                "kl:{:.5f},"
-                "lr_multiplier:{:.3f},"
-                "loss:{},"
-                "entropy:{},"
-                "explained_var_old:{:.3f},"
-                "explained_var_new:{:.3f}"
+                "[cyan]kl:{:.5f}[/], "
+                "lr_mult:{:.3f}, "
+                "[yellow]loss:{:.4f}[/], "
+                "entropy:{:.4f}, "
+                "exp_var_old:{:.3f}, "
+                "exp_var_new:{:.3f}"
             ).format(
                 kl,
                 self.lr_multiplier,
-                loss,
-                entropy,
+                float(loss),
+                float(entropy),
                 explained_var_old,
                 explained_var_new,
             )
@@ -190,9 +192,13 @@ class TrainPipeline:
             )
             win_cnt[winner] += 1
         win_ratio = 1.0 * (win_cnt[1] + 0.5 * win_cnt[-1]) / n_games
-        print(
-            "num_playouts:{}, win: {}, lose: {}, tie:{}".format(
-                self.pure_mcts_playout_num, win_cnt[1], win_cnt[2], win_cnt[-1]
+        console.print(
+            "[bold]eval:[/] num_playouts:{}, win:{}, lose:{}, tie:{}, win_ratio:{:.3f}".format(
+                self.pure_mcts_playout_num,
+                win_cnt[1],
+                win_cnt[2],
+                win_cnt[-1],
+                win_ratio,
             )
         )
         return win_ratio
@@ -203,26 +209,32 @@ class TrainPipeline:
             no_improve_count = 0
             best_for_stop = 0.0
             for i in range(self.game_batch_num):
-                batch_start = time.time()
+                batch_start = time.perf_counter()
                 self.collect_selfplay_data(self.play_batch_size)
-                batch_elapsed = time.time() - batch_start
-                print(
-                    "batch i:{}, episode_len:{}, elapsed:{:.2f}s".format(
-                        i + 1,
-                        self.episode_len,
-                        batch_elapsed,
+                selfplay_elapsed = time.perf_counter() - batch_start
+                train_elapsed = 0.0
+                loss = None
+                entropy = None
+                if len(self.data_buffer) > self.batch_size:
+                    train_start = time.perf_counter()
+                    loss, entropy = self.policy_update()
+                    train_elapsed = time.perf_counter() - train_start
+                console.print(
+                    (
+                        f"batch i:{i + 1}, episode_len:{self.episode_len}, "
+                        f"buffer:{len(self.data_buffer)}/{self.buffer_size}, "
+                        f"[bold blue]selfplay:{selfplay_elapsed:.2f}s[/], "
+                        f"[bold magenta]train:{train_elapsed:.2f}s[/]"
                     )
                 )
-                if len(self.data_buffer) > self.batch_size:
-                    loss, entropy = self.policy_update()
                 # check the performance of the current model,
                 # and save the model params
                 if (i + 1) % self.check_freq == 0:
-                    print("current self-play batch: {}".format(i + 1))
+                    console.print(f"[bold]current self-play batch:[/] {i + 1}")
                     win_ratio = self.policy_evaluate()
                     self.policy_value_net.save_model("./current_policy.model")
                     if win_ratio > self.best_win_ratio:
-                        print("New best policy!!!!!!!!")
+                        console.print("[bold green]New best policy!!!!!!!![/]")
                         self.best_win_ratio = win_ratio
                         # update the best_policy
                         self.policy_value_net.save_model("./best_policy.model")
@@ -238,21 +250,31 @@ class TrainPipeline:
                             no_improve_count = 0
                         else:
                             no_improve_count += 1
-                            print(
+                            console.print(
                                 "early-stop check: no_improve_count={}/{}".format(
-                                    no_improve_count, self.early_stop_patience
+                                    no_improve_count,
+                                    self.early_stop_patience,
                                 )
                             )
                             if no_improve_count >= self.early_stop_patience:
-                                print("Early stop: win_ratio no longer improving")
+                                console.print(
+                                    "Early stop: win_ratio no longer improving"
+                                )
                                 break
         except KeyboardInterrupt:
             print("\n\rquit")
 
 
 if __name__ == "__main__":
-    init_model = (
-        "./current_policy.model" if os.path.exists("./current_policy.model") else None
-    )
+    init_model = None
+    if os.path.exists("./current_policy.model"):
+        init_model = "./current_policy.model"
+        console.print("[bold yellow]Resuming from current_policy.model[/]")
+    elif os.path.exists("./best_policy.model"):
+        init_model = "./best_policy.model"
+        console.print("[bold yellow]No current_policy found, resuming from best_policy.model[/]")
+    else:
+        console.print("[bold yellow]No existing model found, start training from scratch[/]")
+
     training_pipeline = TrainPipeline(init_model=init_model)
     training_pipeline.run()

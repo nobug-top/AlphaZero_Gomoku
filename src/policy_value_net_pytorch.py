@@ -92,6 +92,7 @@ class PolicyValueNet:
         output: a batch of action probabilities and state values
         """
         with torch.no_grad():
+            state_batch = np.array(state_batch, copy=False)
             state_batch = torch.as_tensor(
                 state_batch, dtype=torch.float32, device=self.device
             )
@@ -120,13 +121,19 @@ class PolicyValueNet:
     def train_step(self, state_batch, mcts_probs, winner_batch, lr):
         """perform a training step"""
         state_batch = torch.as_tensor(
-            state_batch, dtype=torch.float32, device=self.device
+            np.array(state_batch, copy=False),
+            dtype=torch.float32,
+            device=self.device,
         )
         mcts_probs = torch.as_tensor(
-            mcts_probs, dtype=torch.float32, device=self.device
+            np.array(mcts_probs, copy=False),
+            dtype=torch.float32,
+            device=self.device,
         )
         winner_batch = torch.as_tensor(
-            winner_batch, dtype=torch.float32, device=self.device
+            np.array(winner_batch, copy=False),
+            dtype=torch.float32,
+            device=self.device,
         )
 
         # zero the parameter gradients

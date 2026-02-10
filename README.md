@@ -1,26 +1,26 @@
-## Gomoku MCTS (AlphaZero style)
+# [Gomoku MCTS (AlphaZero style)](https://zhuanlan.zhihu.com/p/32089487)
 
 This is a minimal Gomoku (Gobang) project that keeps an AlphaZero-style MCTS
 implementation for human vs AI play.
 
-### Requirements
+## Requirements
 
 - Python >= 3.8
 - Numpy >= 1.11
 
-### Getting Started
+## Getting Started
 
 Run the following script from the directory:
 
-```
+```bash
 python human_play.py
 ```
 
-### HTTP Service
+## HTTP Service
 
 Start a simple HTTP service for inference:
 
-```
+```bash
 python http_server.py
 ```
 
@@ -32,7 +32,7 @@ Endpoints:
 
 Example request:
 
-```
+```bash
 curl -X POST http://localhost:8000/infer \
   -H 'Content-Type: application/json' \
   -d '{
@@ -45,11 +45,11 @@ curl -X POST http://localhost:8000/infer \
   }'
 ```
 
-### Parameters
+## Parameters
 
 The game and MCTS parameters are fixed in `human_play.py` via
 `get_game_params()` and are used by `http_server.py` for inference.
 
-### Notes
+## Notes
 
 - `mcts_pure.py` is kept for reference but is not wired into `human_play.py`.

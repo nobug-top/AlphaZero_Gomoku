@@ -7,6 +7,7 @@ An implementation of the training pipeline of AlphaZero for Gomoku
 
 from __future__ import print_function
 import random
+import time
 import numpy as np
 from collections import defaultdict, deque
 from game import Board, Game
@@ -195,8 +196,14 @@ class TrainPipeline:
         """run the training pipeline"""
         try:
             for i in range(self.game_batch_num):
+                batch_start = time.time()
                 self.collect_selfplay_data(self.play_batch_size)
-                print("batch i:{}, episode_len:{}".format(i + 1, self.episode_len))
+                batch_elapsed = time.time() - batch_start
+                print(
+                    "batch i:{}, episode_len:{}, elapsed:{:.2f}s".format(
+                        i + 1, self.episode_len, batch_elapsed
+                    )
+                )
                 if len(self.data_buffer) > self.batch_size:
                     loss, entropy = self.policy_update()
                 # check the performance of the current model,

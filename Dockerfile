@@ -12,7 +12,7 @@ FROM python:3.12-slim as runner
 RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
 USER appuser
 
-COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder --chown=appuser:appgroup /app/.venv /app/.venv
 WORKDIR /app
 
 COPY best_policy_8_8_5.model .

@@ -5,7 +5,7 @@ install:
 
 dev:
     just install
-    BOARD_WIDTH=10 BOARD_HEIGHT=10 uv run src/http_server.py
+    BOARD_SIZE=10 uv run src/http_server.py
 
 docker-build:
     {{ docker }} build -t alphazero-gomoku:latest .

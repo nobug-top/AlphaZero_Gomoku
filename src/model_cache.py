@@ -1,5 +1,4 @@
-from policy_value_net_numpy import PolicyValueNetNumpy
-import pickle
+from policy_value_net_pytorch import PolicyValueNet
 import threading
 
 
@@ -9,20 +8,18 @@ class _ModelCache(object):
     """
 
     _lock: threading.Lock
-    _models: dict[tuple[str, int, int], PolicyValueNetNumpy]
+    _models: dict[str, PolicyValueNet]
 
     def __init__(self):
         self._lock = threading.Lock()
         self._models = {}
 
-    def get(self, model_file, width, height):
-        key = (model_file, width, height)
+    def get(self, model_file, board_width, board_height) -> PolicyValueNet:
         with self._lock:
-            if key in self._models:
-                return self._models[key]
-            policy_param = pickle.load(open(model_file, "rb"), encoding="bytes")
-            model = PolicyValueNetNumpy(width, height, policy_param)
-            self._models[key] = model
+            if model_file in self._models:
+                return self._models[model_file]
+            model = PolicyValueNet(board_width, board_height, model_file)
+            self._models[model_file] = model
             return model
 
 

@@ -179,11 +179,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 def get_config():
+    board_size = int(os.environ.get("BOARD_SIZE", "8"))
+    model_file = f"best_policy_{board_size}_{board_size}_5.model"
     return {
-        "model_file": "best_policy_8_8_5.model",
+        "model_file": model_file,
         # 棋盘大小
-        "width": int(os.environ.get("BOARD_WIDTH", "8")),
-        "height": int(os.environ.get("BOARD_HEIGHT", "8")),
+        "width": board_size,
+        "height": board_size,
         # 连成几子算赢（5 连）
         "n_in_row": 5,
         # PUCT 探索系数，越大越偏探索
